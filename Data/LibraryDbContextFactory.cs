@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using System;
 using System.IO;
 
 namespace LibrarySystem.Data
@@ -11,12 +12,17 @@ namespace LibrarySystem.Data
         {
             IConfigurationRoot configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            var builder = new DbContextOptionsBuilder<LibraryDbContext>();
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var connectionString =
+                Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+                ?? configuration.GetConnectionString("DefaultConnection")
+                ?? "Server=db;Port=3306;Database=library_db;Uid=root;Pwd=123456;";
 
+            Console.WriteLine("DEBUG_CS: " + connectionString);
+
+            var builder = new DbContextOptionsBuilder<LibraryDbContext>();
             builder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 
             return new LibraryDbContext(builder.Options);
